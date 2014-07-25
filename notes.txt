@@ -1,0 +1,130 @@
+fep_micelle_100_0_0__0 .. 30		this gives removal of hcn2_tail from micelle to vacuum
+fep_micelle_solv_100_0_0__0 .. 30	this gives placement of hcn2_tail in bulk methane
+
+fep_micelle2_100_0_0__0 .. 100		didn't converge?
+fep_micelle2_solv_100_0_0__0 .. 100
+
+fep_micelle3_100_0_0__0 .. 30		using hexane nitrile
+fep_micelle3_solv_100_0_0__0 .. 30		
+fep_micelle3_rev_100_0_0__0 .. 30	reverse the membrane, so the nitrogens start out apart (less ordered)
+fep_micelle3_mic_100_0_0__0 .. 30	a rounder bilayer which should turn into an actual micelle
+fep_micelle3_q_100_0_0__0 .. 5		just remove charge (no: doesn't work with compute group/group)
+fep_micelle3_q_imp__0 .. 5	just remove charge and have no solvent
+fep_micelle3_some_100_0_0__0 .. 30	a real liposome (nitrilesome?). Gigantic - 90A to a side. 
+
+Added angle params for cyanoacetylene to oplsaa4.prm
+
+fep_micelle4_100_0_0__0 .. 30		cyanoacetylene
+fep_micelle4_rev_100_0_0__0 .. 30
+fep_micelle4_solv_100_0_0__0 .. 30	
+
+Remove a molecule, removal E gives kinetics (Arhenius)
+Find optimal size - surface tension?
+Try shorter alkane
+
+azo_prop_r20.0 .. 70.0. azo_prop_r0.0 for plain methane energy. Gives total pairwise energy of membrane molecules, not counting molecule self-interaction: average to get energy of each. 
+
+azo_hex_r20.0 .. 70.0.
+
+azoto_flat__0..4: get potential energy. azoto_solv__0: 125 solvent molecules. 
+azoto_smd__5
+azoto_smd__6: hold one N still, pull others down
+azoto_smd__7: hold most Ns in z position, pull one out
+azoto_smd__8: equilibrate then quick pull, weaker constraint on Ns z position
+azoto_smd__9..13: issues with solvent evaporating; bad starting state?
+Solved in azoto_smd_15+ by equilibrating at 10K first. 
+azoto_smd__17: hold corners only. Didn't work for some reason, just dragged whole sheet down. Only held three corners, but that shouldn't be the problem - not even those corners stayed still. 
+18: pulls free completely! actually a good way to test removal. Could be just the fast pull speed, though (50 m/s). 
+19: pull down middle 4 instead of just one. Works, but pulls too far and tends to shred membrane. 
+20: Pull 1/5 as fast and 1/5 as far. Not far enough, can't see anything. 
+21: Pull 3 times further, increase strength of pulling harmonic to 100 kcal/mol/Angstrom
+22: Use fix smd on both groups, no fix spring. But whole sheet moves in one direction! Overwrote one fix smd with the other. 
+23: Take more advantage of periodicity - just pin one corner. Same problem as 22.
+24: retry 23 with separate fixes. Too fast, pulls one test molecule out. 
+25: propane nitrile 24. 
+26: test propane-hexane switching code on propane
+27: like 26 but with hexane
+28: Mistake in z_off_2 for run 27, repeating
+29,30: slow pull, prop and hex
+
+azoto_smd3..6__1: Yank out one molecule, smd. Use prop, but, pent, and hex. 
+azoto_smd3..6__2: Slower pull smd. 
+azoto_smd3..6__3: Sheet bending again. dA = 2*b * (h^2 + b^2/4)^0.5 - b^2, surface tension = dW/dA. Gone somehow? 
+azoto_smd3..10__4: SMD fast. Oops, I mean SMD short distance - rate same as SMD medium. 
+azoto_smd3..11__5: SMD medium
+azoto_smd3..11__6: SMD slow, expected time 1.2 days
+azoto_smd11__5.1
+azoto_smd11__4
+
+azoto_bend__3..11: Bend sheet with slow SMD
+azoto_bend2__3..11: Bend sheet with slower SMD
+
+azoto_bend3__11: Bend hexane sheet with slow SMD
+azoto_bend4__11: Bend hexane sheet with slower SMD
+azoto_bend5__11: Like azoto_bend3__11 but with SMD spring constant 100 instead of 20. 
+
+azoto_bend6__2..11: Pyramid shape, smd_v = 0.000001
+azoto_bend7__2..11: Pyramid shape, smd_v = 0.000002. Failed because %f doesn't have enough precision!
+azoto_bend8__2..11: Pyramid shape, smd_v = 0.000002. 
+azoto_bend9__2..11: Pyramid shape, smd_v = 0.000001. 
+
+smd7_3..11: Benzene solvent, 300K and 1 atm, v = 0.0001
+smd8_3..12: Hexane solvent, 300K and 1 atm, v = 0.0001 
+
+bend1_, bend2_, bend4_: timescale 1,2, and 4 bending with conical indenter
+bend5: fast indenting to test spherical indenter
+bend6: correcting a few problems with hexane bilayer. Bends now, but holding molecule still pops out.
+bend7: Replace corner holding molecule with held rows along xi==0 and yi==0. Works! 
+bend8, bend9: much slower indentations to get accurate results, timescales 0.5 and 1.
+bend10?
+bend11: hold edges, use all species, timescale 1. Redid 12 with right angle param. 
+
+assemble_6: get some self-assembly snapshots
+
+smd7_3..12: spring constants 0.1 and 10.0, v = 0.00001
+smd8_3..12: spring constants 0.4 and 40.0, v = 0.00001
+smd9_3..12: spring constants 0.2 and 20.0, v = 0.000005
+smd10_3..12: spring constants 0.2 and 20.0, v = 0.00002
+
+smd11_12..17: new species
+smd12_12: HCN is smaller than others, redo with denser starting lattice and right angle parameter. 
+
+join_3..18: pull together into lattice very fast as a test. 
+join1_3..18: timescale 1.0. Failed. 
+
+smd13_3..17: all, pulling in the right direction! (depends on z_offset). Holding edges, not all. Timescale 5.0.
+smd14_3..17: like 13, timescale 10.0. Should be able to use start for hardness. 
+13,14 failed (set k negative), redo as 15,16
+
+
+smd15_3..17: Timescale 5.0.
+smd16_3..17: Timescale 10.0.
+assemble0_3..17: pull together 2 molecules, k=1.0, v = 0.000002
+assemble1_3..17: pull together 2 molecules, k=1.0, v = 0.000001
+smd17_3..17: Timescale 1.0.
+smd18_3..17: Timescale 1.0, k pull=100.0, k rest=10.0
+
+smd19_3..17: Timescale 10.0, ks = 100.0
+smd20_3..17: Timescale 5.0, ks = 100.0
+
+ti0_3..17: 10 steps, timescale 1.0
+ti2_3..17: 20 steps, timescale 1.0
+ti5_3..17__0..19: 20 steps, 100 picoseconds each, time-averaged values.
+ti6: generate restart files
+ti7: 24 steps, 100 ps each
+ti8: 60 steps, 200 ps each
+ti9: 23 steps, set up statically, 100 picoseconds each
+ti10: 61 steps, static, 100 picoseconds each
+ti11: 61 steps, 400 picoseconds each
+ti12: 61 steps, 500 picoseconds each
+ti13: 61 steps, k = 50 kcal/mol-A
+ti15: k = 200, continue from end of 12
+ti16: k = 100, continue from 15
+ti17: continue from 12__0, no spring, find minimum z, anneal down to 1.0 K. 
+ti18: continue from 12__0, no spring, find minimum z, 94 K. 
+ti19: continue from ti18, k = 10.0, output every step, umbrella sampling
+ti20: output dimensions
+
+dE / dA = 
+dA = 2*21*sqrt(21^2/4 + 1^2) - 21^2
+
